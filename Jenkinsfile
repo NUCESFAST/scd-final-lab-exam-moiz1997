@@ -3,8 +3,9 @@ pipeline {
     stages {
         stage('i21104 Checkout Source') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_PASSWORD')]) {
-                    sh 'git clone https://github.com/NUCESFAST/scd-final-lab-exam-moiz1997.git'
+                withCredentials([usernamePassword(credentialsId: 'git-credentials', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                    sh 'git clone https://$GIT_USERNAME:$GIT_PASSWORD@github.com/NUCESFAST/scd-final-lab-exam-moiz1997.git'
+                }
             }
         }
         stage('i21104 Build Docker Images') {
