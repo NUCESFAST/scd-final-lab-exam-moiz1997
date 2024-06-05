@@ -1,0 +1,61 @@
+# Auth Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth
+  namespace: production
+spec:
+  selector:
+    app: auth
+  ports:
+    - protocol: TCP
+      port: 13104
+      targetPort: 13104
+
+---
+
+# Classrooms Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: classrooms
+  namespace: production
+spec:
+  selector:
+    app: classrooms
+  ports:
+    - protocol: TCP
+      port: 13105
+      targetPort: 13105
+
+---
+
+# Event Bus Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: event-bus
+  namespace: production
+spec:
+  selector:
+    app: event-bus
+  ports:
+    - protocol: TCP
+      port: 13106
+      targetPort: 13106
+
+---
+
+# Post Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: post
+  namespace: production
+spec:
+  selector:
+    app: post
+  ports:
+    - protocol: TCP
+      port: 13107
+      targetPort: 13107

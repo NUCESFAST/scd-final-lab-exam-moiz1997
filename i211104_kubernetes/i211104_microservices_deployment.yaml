@@ -1,0 +1,131 @@
+# Auth Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth
+  namespace: production
+  labels:
+    app: auth
+    environment: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      containers:
+      - name: auth
+        image: moizbhai97/auth:latest
+        ports:
+        - containerPort: 13104
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /events
+            port: 13104
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        env:
+        - name: MONGO_URL
+          value: "mongodb://mongo:27017/"
+        - name: EVENT_BUS_URL
+          value: "http://event-bus:13106"
+
+---
+
+# Classrooms Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: classrooms
+  namespace: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: classrooms
+  template:
+    metadata:
+      labels:
+        app: classrooms
+    spec:
+      containers:
+      - name: classrooms
+        image: moizbhai97/classrooms:latest
+        ports:
+        - containerPort: 13105
+        env:
+        - name: MONGO_URL
+          value: "mongodb://mongo:27017/"
+        - name: EVENT_BUS_URL
+          value: "http://event-bus:13106"
+
+---
+
+# Event Bus Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-bus
+  namespace: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: event-bus
+  template:
+    metadata:
+      labels:
+        app: event-bus
+    spec:
+      containers:
+      - name: event-bus
+        image: moizbhai97/event-bus:latest
+        ports:
+        - containerPort: 13106
+        env:
+        - name: AUTH_URL
+          value: "http://auth:13104"
+        - name: CLASSROOM_URL
+          value: "http://classrooms:13105"
+        - name: POSTS_URL
+          value: "http://post:13107"
+
+---
+
+# Post Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: post
+  namespace: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: post
+  template:
+    metadata:
+      labels:
+        app: post
+    spec:
+      containers:
+      - name: post
+        image: moizbhai97/post:latest
+        ports:
+        - containerPort: 13107
+        env:
+        - name: MONGO_URL
+          value: "mongodb://mongo:27017/"
+        - name: EVENT_BUS_URL
+          value: "http://event-bus:13106"

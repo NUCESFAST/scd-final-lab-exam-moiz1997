@@ -1,12 +1,12 @@
 pipeline {
     agent any
     stages {
-        stage('Checkout Source') {
+        stage('i211104 Checkout Source') {
             steps {
                 git 'https://github.com/NUCESFAST/scd-final-lab-exam-moiz1997.git'
             }
         }
-        stage('Build and Run Docker Images') {
+        stage('i211104 Build Docker Images') {
             steps{
                 script {
                     def appNames = ['auth', 'classrooms', 'event-bus', 'post', 'client']
@@ -23,7 +23,7 @@ pipeline {
                 }
             }
         }
-        stage('Push Docker Images') {
+        stage('i211104 Push Docker Images') {
             steps{
                 script {
                     def appNames = ['auth', 'classrooms', 'event-bus', 'post', 'client']

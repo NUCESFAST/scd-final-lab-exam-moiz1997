@@ -12,7 +12,7 @@ app.use(cors());
 
 var url = process.env.MONGO_URL;
 
-app.post('/create_post', async (req, res) => {
+app.post('/add_post', async (req, res) => {
     const id = randomBytes(6).toString('hex');
     const { classId, postTitle } = req.body;
     const newPost = { id: id, title: postTitle, comments: [] }

@@ -1,0 +1,44 @@
+# Client Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client
+  namespace: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client
+  template:
+    metadata:
+      labels:
+        app: client
+    spec:
+      containers:
+      - name: client
+        image: moizbhai97/client:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: REACT_APP_AUTH_URL
+          value: "http://auth.example.com"
+        - name: REACT_APP_CLASS_URL
+          value: "http://classrooms.example.com"
+        - name: REACT_APP_POST_URL
+          value: "http://post.example.com"
+
+---
+
+# Client Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: client
+  namespace: production
+spec:
+  selector:
+    app: client
+  ports:
+    - protocol: TCP
+      port: 11104 # My roll number with 1 in start
+      targetPort: 80 

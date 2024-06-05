@@ -74,6 +74,9 @@ kind: Deployment
 metadata:
   name: auth
   namespace: production
+  labels:
+    app: auth
+    environment: production
 spec:
   replicas: 1
   selector:
@@ -88,13 +91,25 @@ spec:
       - name: auth
         image: moizbhai97/auth:latest
         ports:
-        - containerPort: 4000
+        - containerPort: 13104
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /events
+            port: 13104
+          initialDelaySeconds: 15
+          periodSeconds: 20
         env:
         - name: MONGO_URL
           value: "mongodb://mongo:27017/"
         - name: EVENT_BUS_URL
-          value: "http://event-bus:4009"
-
+          value: "http://event-bus:13106"
 ---
 
 # Classrooms Deployment
@@ -117,12 +132,12 @@ spec:
       - name: classrooms
         image: moizbhai97/classrooms:latest
         ports:
-        - containerPort: 4001
+        - containerPort: 13105
         env:
         - name: MONGO_URL
           value: "mongodb://mongo:27017/"
         - name: EVENT_BUS_URL
-          value: "http://event-bus:4009"
+          value: "http://event-bus:13106"
 
 ---
 
@@ -146,14 +161,14 @@ spec:
       - name: event-bus
         image: moizbhai97/event-bus:latest
         ports:
-        - containerPort: 4009
+        - containerPort: 13106
         env:
         - name: AUTH_URL
-          value: "http://auth:4000"
+          value: "http://auth:13104"
         - name: CLASSROOM_URL
-          value: "http://classrooms:4001"
+          value: "http://classrooms:13105"
         - name: POSTS_URL
-          value: "http://post:4002"
+          value: "http://post:13107"
 
 ---
 
@@ -177,12 +192,12 @@ spec:
       - name: post
         image: moizbhai97/post:latest
         ports:
-        - containerPort: 4002
+        - containerPort: 13107
         env:
         - name: MONGO_URL
           value: "mongodb://mongo:27017/"
         - name: EVENT_BUS_URL
-          value: "http://event-bus:4009"
+          value: "http://event-bus:13106"
 
 ---
 
@@ -197,8 +212,8 @@ spec:
     app: auth
   ports:
     - protocol: TCP
-      port: 4000
-      targetPort: 4000
+      port: 13104
+      targetPort: 13104
 
 ---
 
@@ -213,8 +228,8 @@ spec:
     app: classrooms
   ports:
     - protocol: TCP
-      port: 4001
-      targetPort: 4001
+      port: 13105
+      targetPort: 13105
 
 ---
 
@@ -229,8 +244,8 @@ spec:
     app: event-bus
   ports:
     - protocol: TCP
-      port: 4009
-      targetPort: 4009
+      port: 13106
+      targetPort: 13106
 
 ---
 
@@ -245,8 +260,8 @@ spec:
     app: post
   ports:
     - protocol: TCP
-      port: 4002
-      targetPort: 4002
+      port: 13107
+      targetPort: 13107
 
 ---
 
@@ -292,8 +307,8 @@ spec:
     app: client
   ports:
     - protocol: TCP
-      port: 80
-      targetPort: 80
+      port: 11104 # My roll number with 1 in start
+      targetPort: 80 
 
 ---
 
@@ -319,7 +334,7 @@ spec:
           service:
             name: client
             port:
-              number: 80
+              number: 11104
 
 ---
 
@@ -343,7 +358,7 @@ spec:
           service:
             name: auth
             port:
-              number: 4000
+              number: 13104
   - host: classrooms.example.com
     http:
       paths:
@@ -353,7 +368,7 @@ spec:
           service:
             name: classrooms
             port:
-              number: 4001
+              number: 13105
   - host: post.example.com
     http:
       paths:
@@ -363,4 +378,4 @@ spec:
           service:
             name: post
             port:
-              number: 4002
+              number: 13107
