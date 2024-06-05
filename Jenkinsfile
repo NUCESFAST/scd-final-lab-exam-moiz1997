@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('i21104 Checkout Source') {
             steps {
-                git 'https://github.com/moiz1997/SCD_Final_Exam-master.git'
+                git 'https://github.com/NUCESFAST/scd-final-lab-exam-moiz1997.git'
             }
         }
         stage('i21104 Build Docker Images') {
