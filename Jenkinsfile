@@ -1,14 +1,12 @@
 pipeline {
     agent any
     stages {
-        stage('i21104 Checkout Source') {
+        stage('Checkout Source') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'git-credentials', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-                    sh 'git clone https://$GIT_USERNAME:$GIT_PASSWORD@github.com/NUCESFAST/scd-final-lab-exam-moiz1997.git'
-                }
+                git 'https://github.com/NUCESFAST/scd-final-lab-exam-moiz1997.git'
             }
         }
-        stage('i21104 Build Docker Images') {
+        stage('Build and Run Docker Images') {
             steps{
                 script {
                     def appNames = ['auth', 'classrooms', 'event-bus', 'post', 'client']
@@ -25,7 +23,7 @@ pipeline {
                 }
             }
         }
-        stage('i21104 Push Docker Images') {
+        stage('Push Docker Images') {
             steps{
                 script {
                     def appNames = ['auth', 'classrooms', 'event-bus', 'post', 'client']
