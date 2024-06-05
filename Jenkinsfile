@@ -3,17 +3,8 @@ pipeline {
     stages {
         stage('i21104 Checkout Source') {
             steps {
-                checkout([
-                    $class: 'GitSCM', 
-                    branches: [[name: '*/master']], 
-                    doGenerateSubmoduleConfigurations: false, 
-                    extensions: [], 
-                    submoduleCfg: [], 
-                    userRemoteConfigs: [[
-                        credentialsId: 'git-credentials', 
-                        url: 'https://github.com/NUCESFAST/scd-final-lab-exam-moiz1997.git'
-                    ]]
-                ])
+                withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_PASSWORD')]) {
+                    sh 'git clone https://github.com/NUCESFAST/scd-final-lab-exam-moiz1997.git'
             }
         }
         stage('i21104 Build Docker Images') {
