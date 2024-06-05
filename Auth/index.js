@@ -10,7 +10,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
 
-var url = 'mongodb://localhost:27017/';
+var url = process.env.MONGO_URL;
 
 app.post('/signup', async (req, res) => {
     const id = randomBytes(4).toString('hex');
@@ -34,7 +34,7 @@ app.post('/signup', async (req, res) => {
         });
     });
 
-    await axios.post('http://localhost:4009/events', {
+    await axios.post(`${process.env.EVENT_BUS_URL}/events`, {
         type: 'UserCreated',
         data: {
             id, email
@@ -74,6 +74,6 @@ app.post('/events', (req, res) => {
   res.send({});
 })
 
-app.listen(4000, () => {
+app.listen(13104, () => {
     console.log('Authentication Server listening at port 4000...');
 })

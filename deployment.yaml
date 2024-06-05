@@ -1,0 +1,366 @@
+# namespace: production
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+
+---
+
+# MongoDB Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo
+  namespace: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+      - name: mongo
+        image: mongo:latest
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+        - name: mongo-storage
+          mountPath: /data/db
+      volumes:
+      - name: mongo-storage
+        persistentVolumeClaim:
+          claimName: mongo-pvc
+
+---
+
+# MongoDB Persistent Volume Claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+  namespace: production
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+
+# MongoDB Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+  namespace: production
+spec:
+  selector:
+    app: mongo
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
+
+---
+
+# Auth Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth
+  namespace: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      containers:
+      - name: auth
+        image: moizbhai97/auth:latest
+        ports:
+        - containerPort: 4000
+        env:
+        - name: MONGO_URL
+          value: "mongodb://mongo:27017/"
+        - name: EVENT_BUS_URL
+          value: "http://event-bus:4009"
+
+---
+
+# Classrooms Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: classrooms
+  namespace: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: classrooms
+  template:
+    metadata:
+      labels:
+        app: classrooms
+    spec:
+      containers:
+      - name: classrooms
+        image: moizbhai97/classrooms:latest
+        ports:
+        - containerPort: 4001
+        env:
+        - name: MONGO_URL
+          value: "mongodb://mongo:27017/"
+        - name: EVENT_BUS_URL
+          value: "http://event-bus:4009"
+
+---
+
+# Event Bus Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-bus
+  namespace: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: event-bus
+  template:
+    metadata:
+      labels:
+        app: event-bus
+    spec:
+      containers:
+      - name: event-bus
+        image: moizbhai97/event-bus:latest
+        ports:
+        - containerPort: 4009
+        env:
+        - name: AUTH_URL
+          value: "http://auth:4000"
+        - name: CLASSROOM_URL
+          value: "http://classrooms:4001"
+        - name: POSTS_URL
+          value: "http://post:4002"
+
+---
+
+# Post Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: post
+  namespace: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: post
+  template:
+    metadata:
+      labels:
+        app: post
+    spec:
+      containers:
+      - name: post
+        image: moizbhai97/post:latest
+        ports:
+        - containerPort: 4002
+        env:
+        - name: MONGO_URL
+          value: "mongodb://mongo:27017/"
+        - name: EVENT_BUS_URL
+          value: "http://event-bus:4009"
+
+---
+
+# Auth Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth
+  namespace: production
+spec:
+  selector:
+    app: auth
+  ports:
+    - protocol: TCP
+      port: 4000
+      targetPort: 4000
+
+---
+
+# Classrooms Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: classrooms
+  namespace: production
+spec:
+  selector:
+    app: classrooms
+  ports:
+    - protocol: TCP
+      port: 4001
+      targetPort: 4001
+
+---
+
+# Event Bus Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: event-bus
+  namespace: production
+spec:
+  selector:
+    app: event-bus
+  ports:
+    - protocol: TCP
+      port: 4009
+      targetPort: 4009
+
+---
+
+# Post Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: post
+  namespace: production
+spec:
+  selector:
+    app: post
+  ports:
+    - protocol: TCP
+      port: 4002
+      targetPort: 4002
+
+---
+
+# Client Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client
+  namespace: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client
+  template:
+    metadata:
+      labels:
+        app: client
+    spec:
+      containers:
+      - name: client
+        image: moizbhai97/client:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: REACT_APP_AUTH_URL
+          value: "http://auth.example.com"
+        - name: REACT_APP_CLASS_URL
+          value: "http://classrooms.example.com"
+        - name: REACT_APP_POST_URL
+          value: "http://post.example.com"
+
+---
+
+# Client Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: client
+  namespace: production
+spec:
+  selector:
+    app: client
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+
+# Client Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: client-ingress
+  namespace: production
+  annotations:
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/custom-http-errors: '404'
+    nginx.ingress.kubernetes.io/default-backend: client
+spec:
+  rules:
+  - host: example.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: client
+            port:
+              number: 80
+
+---
+
+# Microservices Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: microservices-ingress
+  namespace: production
+  annotations:
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  rules:
+  - host: auth.example.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: auth
+            port:
+              number: 4000
+  - host: classrooms.example.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: classrooms
+            port:
+              number: 4001
+  - host: post.example.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: post
+            port:
+              number: 4002

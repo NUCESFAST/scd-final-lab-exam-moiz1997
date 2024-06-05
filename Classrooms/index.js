@@ -11,19 +11,21 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
 
-var url = 'mongodb://localhost:27017/';
+let users = {};
+
+var url = process.env.MONGO_URL;
 
 app.post('/create_class', async (req, res) => {
     const classId = randomBytes(3).toString('hex');
     const { userId, title } = req.body;
-    const newClass = { id: classId, data: { classId: classId, title: title }}
+    const newClass = { id: classId, data: { classId: classId, title: title } }
 
     await MongoClient.connect(url, (err, db) => {
         if (err) throw err;
         var dbo = db.db('ClassroomMS');
 
         dbo.collection('user').updateOne(
-            { 'id': userId }, 
+            { 'id': userId },
             { $push: { 'class_list': classId } }
         );
 
@@ -41,7 +43,7 @@ app.post('/create_class', async (req, res) => {
         db.close();
     });
 
-    await axios.post('http://localhost:4009/events', {
+    await axios.post(`${process.env.EVENT_BUS_URL}/events`, {
         type: 'ClassCreated',
         data: classId
     });
@@ -50,7 +52,7 @@ app.post('/create_class', async (req, res) => {
 });
 
 app.post('/add_class', async (req, res) => {
-    const {userId, classId} = req.body;
+    const { userId, classId } = req.body;
 
     await MongoClient.connect(url, (err, db) => {
         if (err) throw err;
@@ -77,17 +79,23 @@ app.get('/get_classes/:id', async (req, response) => {
 
         dbo.collection('user').find({ id: userId }).toArray((err, res) => {
             if (err) throw err;
-            const n = res[0].class_list.length;
+            if (res[0] && res[0].class_list) {
+                const n = res[0].class_list.length;
 
-            res[0].class_list.forEach((item, index) => {
-                resolvePromise(dbo, item).then(resp => {
-                    resClassList.push(resp[0].data);
+                res[0].class_list.forEach((item, index) => {
+                    resolvePromise(dbo, item).then(resp => {
+                        resClassList.push(resp[0].data);
 
-                    if (resClassList.length == n) {
-                        response.status(200).send({data: resClassList});
-                    }
+                        if (resClassList.length == n) {
+                            response.status(200).send({ data: resClassList });
+                        }
+                    });
                 });
-            });
+            } else {
+                // Handle the case when class_list is undefined
+                // For example, you might want to send a response with an error message
+                response.status(400).send({ error: 'class_list is undefined' });
+            }
 
             db.close();
         });
@@ -109,9 +117,9 @@ app.post('/events', async (req, res) => {
             if (err) throw err;
             var dbo = db.db('ClassroomMS');
 
-            dbo.collection('user').insertOne({id: data.id, class_list: []}, (err, res) => {
+            dbo.collection('user').insertOne({ id: data.id, class_list: [] }, (err, res) => {
                 if (err) throw err;
-                db.close();                
+                db.close();
             });
         });
     }
@@ -120,6 +128,6 @@ app.post('/events', async (req, res) => {
 });
 
 
-app.listen(4001, () => {
+app.listen(13105, () => {
     console.log('Classroom service listening at port 4001...');
 })

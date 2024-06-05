@@ -21,20 +21,20 @@ const Home = () => {
 
   const createClass = async () => {
     console.log('Creating class');
-    await axios.post('http://localhost:4001/create_class', {
+    await axios.post(`${window.env.REACT_APP_CLASS_URL}/create_class`, {
       userId, title
     });
   }
 
   const joinClass = async () => {
     console.log('Joining class');
-    await axios.post('http://localhost:4001/add_class', {
+    await axios.post(`${window.env.REACT_APP_CLASS_URL}/add_class`, {
       userId, classId
     });
   };
 
   const fetchClasses = async () => {
-    const res = await axios.get('http://localhost:4001/get_classes/' + userId);
+    const res = await axios.get(`${window.env.REACT_APP_CLASS_URL}/get_classes/${userId}`);
 
     setClasses(res.data);
   };

@@ -1,0 +1,23 @@
+services:
+  database:
+    image: mongo:latest
+
+  auth:
+    build: ./Auth
+    image: moizbhai97/auth
+  
+  classrooms:
+    build: ./Classrooms
+    image: moizbhai97/classrooms
+  
+  event-bus:
+    build: ./event-bus
+    image: moizbhai97/event-bus
+  
+  post:
+    build: ./Post
+    image: moizbhai97/post
+  
+  client:
+    build: ./client
+    image: moizbhai97/client

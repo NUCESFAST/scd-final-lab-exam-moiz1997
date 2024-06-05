@@ -15,7 +15,9 @@ const Posts = () => {
 
   const createPost = async (e) => {
     e.preventDefault();
-    const res = await axios.post('http://localhost:4002/create_post', { classId, postTitle });
+    const res = await axios.post(`${window.env.REACT_APP_POST_URL}/add_post`, {
+      classId, postTitle
+    });
     setPosts(res.data);
     setPostTitle("");
 
@@ -33,7 +35,7 @@ const Posts = () => {
     setComments(comments);
 
     // make add_comment axios request here
-    await axios.post('http://localhost:4002/add_comment', {
+    await axios.post(`${window.env.REACT_APP_POST_URL}/add_comment`, {
       id: postId,
       class: classId,
       text: comments[postId]
@@ -80,7 +82,7 @@ const Posts = () => {
 
   useEffect(() => {
     const fetchPosts = async () => {
-      const res = await axios.get('http://localhost:4002/get_posts/' + classId);
+      const res = await axios.get(`${window.env.REACT_APP_POST_URL}/get_posts/${classId}`);
       setPosts(res.data);
     };
     
